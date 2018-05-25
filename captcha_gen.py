@@ -33,7 +33,8 @@ def scg(size, noise=0.5, length =1, font="C:/Windows/Fonts/ARLRDBD.TTF"):
     text, _ = c.write(filename +'(' + str(word_dic[filename]) +  ').png')
     print(text)  # string printed into filename.png
 
-i=0
-while i < 10:
-    i = i + 1
-    scg(450, 0.3)
+if __name__ == "__main__":
+    i=0
+    while i < 10:
+        i = i + 1
+        scg(450, 0.3)
