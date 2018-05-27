@@ -29,7 +29,7 @@ def generate_captcha(noise=0.5, length=1):
 	# Initialize Claptcha object with random text, FreeMono as font, of size
 	# 100x30px, using bicubic resampling filter and adding a bit of white noise
 	captcha = Claptcha(randomChar(length), font, (size * length, size),
-	                   margin=(1, 1), resample=Image.BILINEAR, noise=noise)
+					   margin=(1, 1), resample=Image.BILINEAR, noise=noise)
 	return captcha
 
 
@@ -55,7 +55,7 @@ def write_captcha(image: Image.Image, filename_without_extension):
 	return image.save(folder + filename_without_extension + ".jpg")
 
 
-def make_ground_truth_box(roi, image: Image.Image, file_basename):
+def make_ground_truth_box(class_index, roi, image: Image.Image, file_basename):
 	'''
 	roi: (leftupper.x, leftupper.y, rightlower.x, rightlower.y)
 	'''
@@ -67,8 +67,8 @@ def make_ground_truth_box(roi, image: Image.Image, file_basename):
 	center = ((roi[0] + roi[2]) / 2, (roi[1] + roi[3]) / 2)
 
 	with open(folder + file_basename + ".txt", mode="w+") as f:
-		f.write("{index:d} {x:f} {y:f} {width:f} {height:f}\n".format(
-			index=0, x=center[0] / image.width,
+		f.write("{class_index} {x:f} {y:f} {width:f} {height:f}\n".format(
+			class_index=class_index, x=center[0] / image.width,
 			y=center[1] / image.height,
 			width=roi_width / image.width,
 			height=roi_height/image.height))
@@ -81,6 +81,6 @@ if __name__ == "__main__":
 		file_basename = "{cnt:05d}_label_{label:s}".format(
 			cnt=i, label=captcha.source)
 		roi, image = add_background(captcha)
-		make_ground_truth_box(roi, image, file_basename)
+		make_ground_truth_box(captcha.source, roi, image, file_basename)
 		write_captcha(image, file_basename)
 		print("{}th image, label: {}".format(i, captcha.text))
