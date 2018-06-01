@@ -1,7 +1,9 @@
+#!/usr/bin/python3
 import math
 import os
 import random
 import string
+from sys import argv
 
 import PIL
 from claptcha import Claptcha
@@ -29,7 +31,7 @@ def generate_captcha(noise=0.5, length=1):
 	# Initialize Claptcha object with random text, FreeMono as font, of size
 	# 100x30px, using bicubic resampling filter and adding a bit of white noise
 	captcha = Claptcha(randomChar(length), font, (size * length, size),
-	                   margin=(1, 1), resample=Image.BILINEAR, noise=noise)
+			   margin=(1, 1), resample=Image.BILINEAR, noise=noise)
 	return captcha
 
 
@@ -76,7 +78,12 @@ def make_ground_truth_box(roi, image: Image.Image, file_basename):
 
 
 if __name__ == "__main__":
-	for i in range(10):
+	if len(argv) == 1:
+	    length = 10
+	else:
+	    length = int(argv[1])
+
+	for i in range(length):
 		captcha = generate_captcha(noise=0.3)
 		file_basename = "{cnt:05d}_label_{label:s}".format(
 			cnt=i, label=captcha.source)
