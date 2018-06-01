@@ -1,7 +1,9 @@
+#!/usr/bin/python3
 import math
 import os
 import random
 import string
+from sys import argv
 
 import PIL
 from claptcha import Claptcha
@@ -76,7 +78,12 @@ def make_ground_truth_box(class_index, roi, image: Image.Image, file_basename):
 
 
 if __name__ == "__main__":
-	for i in range(10):
+	if len(argv) == 1:
+	    length = 10
+	else:
+	    length = int(argv[1])
+
+	for i in range(length):
 		captcha = generate_captcha(noise=0.3)
 		file_basename = "{cnt:05d}_label_{label:s}".format(
 			cnt=i, label=captcha.source)
