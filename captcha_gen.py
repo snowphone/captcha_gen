@@ -1,8 +1,10 @@
 #!/usr/bin/python3
+import argparse 
 import math
 import os
 import random
 import string
+import sys
 from sys import argv
 
 import PIL
@@ -21,9 +23,6 @@ def generate_captcha(noise=0.5, length=1):
 		return "".join(random.choices(string.digits, k=length))
 	fonts = [font for font in os.listdir("./fonts/") if isfont(font)]
 
-	# def randomString():
-	#     rndLetters = (random.choice(string.ascii_uppercase) for _ in range(6))
-	#     return "".join(rndLetters)
 
 	font = "./fonts/" + random.choice(fonts)
 	size = random.randint(100, 200)
@@ -78,13 +77,19 @@ def make_ground_truth_box(class_index, roi, image: Image.Image, file_basename):
 
 
 if __name__ == "__main__":
-	if len(argv) == 1:
-	    length = 10
-	else:
-	    length = int(argv[1])
+	if len(argv) < 2:
+		print("Usage: {} <numbers of captcha> [-valid]".format(argv[0]), file=sys.stderr)
+		exit(1)
 
-	for i in range(length):
-		captcha = generate_captcha(noise=0.3)
+	num_of_captcha = int(argv[1])
+
+
+	for i in range(num_of_captcha):
+		if argv.count("-valid"):
+			length = random.randint(2, 6)
+		else:
+			length = 1
+		captcha = generate_captcha(noise=0.3, length=length)
 		file_basename = "{cnt:05d}_label_{label:s}".format(
 			cnt=i, label=captcha.source)
 		roi, image = add_background(captcha)
