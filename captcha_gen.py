@@ -1,9 +1,17 @@
 #!/usr/bin/python3
+'''
+TODO
+사진에 captcha가 한장씩만 존재하는게 문제가 될 수도 있다고 판단함.
+1 ~ 3장 정도로 다양하게 들어갈 수 있도록 할 예정.
+
+사진의 배경이 다양해질 수 있도록 할 예정.
+
+'''
 import argparse 
 import math
 import os
 import random
-import string
+import string	#digit, alphabet, alphanumeric set
 import sys
 from sys import argv
 
@@ -27,8 +35,6 @@ def generate_captcha(noise=0.5, length=1):
 	font = "./fonts/" + random.choice(fonts)
 	size = random.randint(100, 200)
 
-	# Initialize Claptcha object with random text, FreeMono as font, of size
-	# 100x30px, using bicubic resampling filter and adding a bit of white noise
 	captcha = Claptcha(randomChar(length), font, (size * length, size),
 					   margin=(1, 1), resample=Image.BILINEAR, noise=noise)
 	return captcha
