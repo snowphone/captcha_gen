@@ -89,7 +89,7 @@ if __name__ == "__main__":
 			length = random.randint(2, 6)
 		else:
 			length = 1
-		captcha = generate_captcha(noise=0.3, length=length)
+		captcha = generate_captcha(noise=0, length=length)
 		file_basename = "{cnt:05d}_label_{label:s}".format(
 			cnt=i, label=captcha.source)
 		roi, image = add_background(captcha)
