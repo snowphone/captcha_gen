@@ -81,7 +81,7 @@ class Captcha_image():
 		height = self.captcha_list[0].h
 
 		def get_random_roi(width, height):
-			leftupper = (random.randint(10, width), random.randint(0, height))
+			leftupper = (random.randint(80, width), random.randint(0, height))
 			rightlower = (leftupper[0] + width, leftupper[1] + height)
 			return (leftupper, rightlower)
 
@@ -132,7 +132,7 @@ class Validation_image(Captcha_image):
 		return
 
 	def _random_char(self):
-		n = random.randint(1, 5)
+		n = random.randint(4, 6)
 		ret = ""
 		for _ in range(n):
 			ret += super()._random_char()
@@ -141,8 +141,8 @@ class Validation_image(Captcha_image):
 	def _generate_captcha(self, _w, _h):
 		self.max_captcha_num = 1
 		n = random.randint(self.max_size // 2, self.max_size)
-		width = n * 0.9 * 5
-		height = n
+		width = 100 * 5
+		height = 30 * 5
 		return super()._generate_captcha(width, height)
 
 	def _make_ground_truth_box(self, _file_basename):
