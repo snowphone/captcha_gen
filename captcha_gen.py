@@ -22,11 +22,11 @@ from PIL import Image
 
 class Captcha_image():
 
-	def __init__(self, noise=0, valid=False):
+	#public
+	def __init__(self, noise=0):
 		self.captcha_list = []
 		self.roi_list = []
 		self.noise = noise
-		self.valid = valid
 		self.max_size = 200
 		self.max_captcha_num = 5
 		self.image = Image.new( 
@@ -34,29 +34,39 @@ class Captcha_image():
 				(int(self.max_size * 0.9 * (self.max_captcha_num + 1)), self.max_size * 2),			
 				color=(255, 255, 255))
 
-		self._generate_captcha()
+		size = random.randint(self.max_size // 2, self.max_size)
+		self._generate_captcha(size * 0.9, size)
 		self._add_background()
 		return
-	
-	def _generate_captcha(self):
+
+	def save(self, filename_without_extension):
+		folder = "./img/"
+		os.makedirs(folder, exist_ok=True)
+
+		self._make_ground_truth_box(filename_without_extension)
+
+		return self.image.save(folder + filename_without_extension + ".jpg")
+
+	#private
+	def _random_char(self):
+		return random.choice(string.digits)
+
+	def _generate_captcha(self, width, height):
 		"""
 		It returns captcha object.
 		"""
 		def isfont(filename):
 			return True if filename.find(".ttf") != -1 or filename.find(".otf") != -1 else False
 
-		def randomChar():
-			return random.choice(string.digits)
 		fonts = [font for font in os.listdir("./fonts/") if isfont(font)]
 
 
 		font = "./fonts/" + random.choice(fonts)
-		size = random.randint(self.max_size // 2, self.max_size)
 
 		self.captcha_list = [ Claptcha(
-			randomChar(), 
+			self._random_char(), 
 			font, 
-			(size * 0.9 , size),
+			(width , height),
 			margin=(0, 0), 
 			resample=Image.BILINEAR, 
 			noise=self.noise) 
@@ -71,7 +81,7 @@ class Captcha_image():
 		height = self.captcha_list[0].h
 
 		def get_random_roi(width, height):
-			leftupper = (random.randint(0, width), random.randint(0, height))
+			leftupper = (random.randint(10, width), random.randint(0, height))
 			rightlower = (leftupper[0] + width, leftupper[1] + height)
 			return (leftupper, rightlower)
 
@@ -92,14 +102,6 @@ class Captcha_image():
 		return 
 
 
-	def save(self, filename_without_extension):
-		folder = "./img/"
-		os.makedirs(folder, exist_ok=True)
-
-		if not self.valid:
-			self._make_ground_truth_box(filename_without_extension)
-
-		return self.image.save(folder + filename_without_extension + ".jpg")
 
 
 	def _make_ground_truth_box(self, file_basename):
@@ -124,6 +126,29 @@ class Captcha_image():
 		return
 	#end of Captcha_image 
 
+class Validation_image(Captcha_image):
+	def __init__(self, noise=0):
+		super().__init__(noise)
+		return
+
+	def _random_char(self):
+		n = random.randint(1, 5)
+		ret = ""
+		for _ in range(n):
+			ret += super()._random_char()
+		return ret
+
+	def _generate_captcha(self, _w, _h):
+		self.max_captcha_num = 1
+		n = random.randint(self.max_size // 2, self.max_size)
+		width = n * 0.9 * 5
+		height = n
+		return super()._generate_captcha(width, height)
+
+	def _make_ground_truth_box(self, _file_basename):
+		pass
+
+
 
 if __name__ == "__main__":
 	try:
@@ -131,10 +156,17 @@ if __name__ == "__main__":
 	except IndexError as err:
 		print("Usage: {} <numbers of captcha> [-valid]".format(argv[0]), file=sys.stderr)
 		exit(1)
+	
+	isvalid = bool(argv.count("-valid"))
 
 	for i in range(num_of_captcha):
-		captcha = Captcha_image()
+		if isvalid:
+			captcha = Validation_image()
+		else:
+			captcha = Captcha_image() 
 		label = "".join([cap.text for cap in captcha.captcha_list])
 		file_basename = "{cnt:05d}_label_{label:s}".format( cnt=i, label=label )
+		if isvalid:
+			file_basename = "valid_" + file_basename 
 		captcha.save(file_basename)
 		print("{}th image, label: {}".format(i, label))
