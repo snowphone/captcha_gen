@@ -1,11 +1,7 @@
 #!/usr/bin/python3
 '''
 TODO
-사진에 captcha가 한장씩만 존재하는게 문제가 될 수도 있다고 판단함.
-1 ~ 3장 정도로 다양하게 들어갈 수 있도록 할 예정.
-
 사진의 배경이 다양해질 수 있도록 할 예정.
-
 '''
 import argparse 
 import math
@@ -25,6 +21,7 @@ class Captcha_image():
 	#public
 	def __init__(self, noise=0):
 		self.captcha_list = []
+		self.table = self._init_table()
 		self.roi_list = []
 		self.noise = noise
 		self.max_size = 200
@@ -48,8 +45,14 @@ class Captcha_image():
 		return self.image.save(folder + filename_without_extension + ".jpg")
 
 	#private
+	def _init_table(self):
+		table = {}
+		for i, ch in enumerate(string.digits + string.ascii_uppercase):
+			table[ch] = i
+		return table
+
 	def _random_char(self):
-		return random.choice(string.digits)
+		return random.choice(string.ascii_uppercase + string.digits)
 
 	def _generate_captcha(self, width, height):
 		"""
@@ -117,7 +120,7 @@ class Captcha_image():
 				center = ((roi[0] + roi[2]) / 2, (roi[1] + roi[3]) / 2)
 
 				f.write("{class_index} {x:f} {y:f} {width:f} {height:f}\n".format(
-					class_index=captcha.text,
+					class_index=self.table[captcha.text],
 					x=center[0] / self.image.width,
 					y=center[1] / self.image.height,
 					width=roi_width / self.image.width,
