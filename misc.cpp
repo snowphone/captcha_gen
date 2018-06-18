@@ -132,7 +132,7 @@ vector<string> get_image_list(const char* image_folder)
     while( (file_info = readdir(directory)) )
     {
         string name(file_info->d_name);
-        if(name.rfind(".jpg") != string::npos)
+        if((name.rfind(".jpg") & name.rfind(".png"))!= string::npos)
         {
             name = folder_name + '/' + name;
             cout << "load\t" << name << endl;
@@ -153,6 +153,8 @@ string get_new_name(const string& image_name, const string& weight_filename)
     string extension; 
     if(image_name.find(".jpg") != string::npos)
         extension = ".jpg";
+	else if(image_name.rfind(".png") != string::npos)
+        extension = ".png";
     else
         extension = ".mkv";
 
