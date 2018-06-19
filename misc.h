@@ -24,6 +24,6 @@ struct Data {
 
 Data read_data(const char* data_filename);
 std::vector<std::string> get_image_list(const char* image_folder);
-std::string get_new_name(const std::string& image_name, const std::string& weight_filename = "");
+std::string get_new_name(const std::string& image_name, const std::string& epilogue = "results");
 std::vector<std::string> read_image_name(const char* image_list);
 std::string get_epoch(const std::string& weight_filename);

@@ -145,7 +145,7 @@ vector<string> get_image_list(const char* image_folder)
 }
 
 
-string get_new_name(const string& image_name, const string& weight_filename)
+string get_new_name(const string& image_name, const string& epilogue)
 {
     string::const_iterator basename_begin = image_name.begin() + image_name.rfind('/') + 1,
         basename_end = image_name.begin() + image_name.rfind('.');
@@ -158,10 +158,7 @@ string get_new_name(const string& image_name, const string& weight_filename)
     else
         extension = ".mkv";
 
-	if(!weight_filename.empty())
-		return basename + "_" + get_epoch(weight_filename) + "_" + extension;
-	else
-		return basename + "_new_" + extension;
+	return basename + "_" + epilogue + extension;
 }
 
 vector<string> read_image_name(const char* image_list)

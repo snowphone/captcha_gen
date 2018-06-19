@@ -23,7 +23,7 @@ public:
 		}
 	string predict(const string& image_name);
 	double score(string label, string prediction);
-	void flatten_boxes(const string& image_name, vector<bbox_t>& b_boxes);
+	void flatten_boxes(const string& image_name, const string& epilogue, vector<bbox_t>& b_boxes);
 	string get_label(string image_name);
 	
 private:
@@ -112,12 +112,12 @@ string Solver::predict(const string& image_name)
 	vector<bbox_t> b_boxes = detector.detect_resized(img, img.w * 3, img.h * 3 );
 
 	if(show_image)
-		flatten_boxes(image_name + "_before_nms", b_boxes);
+		flatten_boxes(image_name , "_before_nms", b_boxes);
 
 	non_max_suppression(b_boxes);
 
 	if(show_image)
-		flatten_boxes(image_name + "_after_nms", b_boxes);
+		flatten_boxes(image_name , "_after_nms", b_boxes);
 
 	sort(b_boxes.begin(), b_boxes.end(), [](const bbox_t& lhs, const bbox_t& rhs){
 			return lhs.x < rhs.x; });
@@ -129,11 +129,12 @@ string Solver::predict(const string& image_name)
 }
 
 // bounding box를 image에 씌우는 함수
-void Solver::flatten_boxes(const string& image_name, std::vector<bbox_t>& b_boxes)
+void Solver::flatten_boxes(const string& image_name, const string& epilogue, std::vector<bbox_t>& b_boxes)
 {
+	string folder = "./results/";
 	cv::Mat image = load_Mat(image_name);
 	draw_boxes(image, b_boxes, obj_names);
-	string name = get_new_name(image_name);
+	string name = folder + get_new_name(image_name, epilogue);
 	cout << name  << ",\t box: " << b_boxes.size() << endl;
 	assert(cv::imwrite(name, image));
 }
