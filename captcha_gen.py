@@ -54,7 +54,7 @@ class Captcha_image():
 	def _random_char(self):
 		return random.choice(string.ascii_uppercase + string.digits)
 
-	def _generate_captcha(self, width, height):
+	def _generate_captcha(self, width, height, margin=(0,0)):
 		"""
 		It returns captcha object.
 		"""
@@ -73,7 +73,7 @@ class Captcha_image():
 			self._random_char(), 
 			font, 
 			(width , height),
-			margin=(0, 0), 
+			margin=margin, 
 			resample=Image.BILINEAR, 
 			noise=self.noise) 
 			for _ in range(random.randint(1, self.max_captcha_num))]
@@ -149,9 +149,14 @@ class Validation_image(Captcha_image):
 		n = random.randint(self.max_size // 2, self.max_size)
 		width = 100 * 5
 		height = 30 * 5
-		return super()._generate_captcha(width, height)
+
+		return super()._generate_captcha(width, height, (10, 10))
 
 	def _make_ground_truth_box(self, _file_basename):
+		self.image = self.captcha_list[0].image[1]
+		pass
+
+	def _add_background(self):
 		pass
 
 
