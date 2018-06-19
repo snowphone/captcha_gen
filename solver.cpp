@@ -8,6 +8,7 @@
 #include <numeric>
 
 
+#define OPENCV
 #include "misc.h"
 #include "parser.h"
 #include "yolo_v2_class.hpp"
@@ -16,15 +17,12 @@ using namespace std;
 
 class Solver{
 public:
-	Solver(const char* data_path, const char* cfg_path, const char* weight_path, bool visible=false)
-		: show_image(visible), detector(Detector(cfg_path, weight_path)) {
-			data_record = read_data(data_path);
-			obj_names = objects_names_from_file(data_record.names);
-		}
+	Solver(const char* data_path, const char* cfg_path, const char* weight_path, bool visible=false);
 	string predict(const string& image_name);
 	double score(string label, string prediction);
-	void flatten_boxes(const string& image_name, const string& epilogue, vector<bbox_t>& b_boxes);
+	void flatten_boxes(cv::Mat image, const string& image_name, const string& epilogue, vector<bbox_t>& b_boxes);
 	string get_label(string image_name);
+	void resize(cv::Mat& mat, double ratio);
 	
 private:
 	void non_max_suppression(vector<bbox_t>& b_boxes);
@@ -33,7 +31,7 @@ private:
 
 	Detector detector;
 	std::vector<std::string> obj_names;
-	bool show_image = false;
+	bool show_image;
 	Data data_record;
 };
 
@@ -62,8 +60,15 @@ int main(int argc, const char* argv[])
 		cout << label << '\t' << prediction << '\t' << cur_score << endl;
 		score_vector.push_back(cur_score);
     }
-	cout << show_image << endl;
 	cout << "Accuracy: " << accumulate(score_vector.begin(), score_vector.end(), 0.) / score_vector.size() << endl;
+}
+
+
+Solver::Solver(const char* data_path, const char* cfg_path, const char* weight_path, bool visible)
+		: show_image(visible), detector(Detector(cfg_path, weight_path)) 
+{
+	data_record = read_data(data_path);
+	obj_names = objects_names_from_file(data_record.names);
 }
 
 // regex: .*label_([0-9A-Z]+).jpg 를 추출
@@ -108,16 +113,17 @@ void Solver::non_max_suppression(vector<bbox_t>& b_boxes)
 // YOLO를 이용하여 Captcha를 해독하고, 그 string을 반환하는 함수
 string Solver::predict(const string& image_name)
 {
-	image_t img = detector.load_image(image_name);
-	vector<bbox_t> b_boxes = detector.detect_resized(img, img.w * 3, img.h * 3 );
+	cv::Mat img = cv::imread(image_name);
+	resize(img, 3.);
+	vector<bbox_t> b_boxes = detector.detect(img);
 
 	if(show_image)
-		flatten_boxes(image_name , "_before_nms", b_boxes);
+		flatten_boxes(img, image_name , "_before_nms", b_boxes);
 
 	non_max_suppression(b_boxes);
 
 	if(show_image)
-		flatten_boxes(image_name , "_after_nms", b_boxes);
+		flatten_boxes(img, image_name , "_after_nms", b_boxes);
 
 	sort(b_boxes.begin(), b_boxes.end(), [](const bbox_t& lhs, const bbox_t& rhs){
 			return lhs.x < rhs.x; });
@@ -129,14 +135,13 @@ string Solver::predict(const string& image_name)
 }
 
 // bounding box를 image에 씌우는 함수
-void Solver::flatten_boxes(const string& image_name, const string& epilogue, std::vector<bbox_t>& b_boxes)
+void Solver::flatten_boxes(cv::Mat image, const string& image_name, const string& epilogue, std::vector<bbox_t>& b_boxes)
 {
 	string folder = "./results/";
-	cv::Mat image = load_Mat(image_name);
 	draw_boxes(image, b_boxes, obj_names);
 	string name = folder + get_new_name(image_name, epilogue);
 	cout << name  << ",\t box: " << b_boxes.size() << endl;
-	assert(cv::imwrite(name, image));
+	cv::imwrite(name, image);
 }
 
 // 정답과 예측값 사이에 몇 글자나 맞추었는지 계산.
@@ -154,4 +159,7 @@ double Solver::score(string label, string prediction)
 	return fn(fn, label.begin(), prediction.begin()) / label.size();
 }
 
-
+void Solver::resize(cv::Mat& mat, double ratio)
+{
+	cv::resize(mat, mat, cv::Size(), ratio, ratio, CV_INTER_CUBIC);
+}
