@@ -20,12 +20,22 @@ class Captcha_image():
 
 	#public
 	def __init__(self, noise=0):
+
+		def isfont(filename):
+			return True if filename.find(".ttf") != -1 or filename.find(".otf") != -1 else False
+
 		self.captcha_list = []
 		self.table = self._init_table()
+		self.fonts = [os.path.join(dirpath, name) 
+				for dirpath, _dirname, names in os.walk("./fonts/") 
+				for name in names
+				if isfont(name)]
+
+
 		self.roi_list = []
 		self.noise = noise
 		self.max_size = 200
-		self.max_captcha_num = 5
+		self.max_captcha_num = 8
 		self.image = Image.new( 
 				"RGB", 
 				(int(self.max_size * 0.9 * (self.max_captcha_num + 1)), self.max_size * 2),			
@@ -54,29 +64,22 @@ class Captcha_image():
 	def _random_char(self):
 		return random.choice(string.ascii_uppercase + string.digits)
 
+
 	def _generate_captcha(self, width, height, margin=(0,0)):
 		"""
 		It returns captcha object.
 		"""
-		def isfont(filename):
-			return True if filename.find(".ttf") != -1 or filename.find(".otf") != -1 else False
 
-		fonts = [os.path.join(dirpath, name) 
-				for dirpath, _dirname, names in os.walk("./fonts/") 
-				for name in names
-				if isfont(name)]
-
-
-		font = random.choice(fonts)
+		char_num = random.randint(1, self.max_captcha_num)
 
 		self.captcha_list = [ Claptcha(
 			self._random_char(), 
-			font, 
+			font,
 			(width , height),
 			margin=margin, 
 			resample=Image.BILINEAR, 
 			noise=self.noise) 
-			for _ in range(random.randint(1, self.max_captcha_num))]
+			for font in random.sample(self.fonts, char_num)]
 
 		return self.captcha_list
 	
@@ -108,8 +111,6 @@ class Captcha_image():
 		return 
 
 
-
-
 	def _make_ground_truth_box(self, file_basename):
 		'''
 		roi: (leftupper.x, leftupper.y, rightlower.x, rightlower.y)
@@ -138,7 +139,7 @@ class Validation_image(Captcha_image):
 		return
 
 	def _random_char(self):
-		n = random.randint(4, 6)
+		n = random.randint(4, 8)
 		ret = ""
 		for _ in range(n):
 			ret += super()._random_char()
