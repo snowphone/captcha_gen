@@ -25,7 +25,7 @@ public:
 	void resize(cv::Mat& mat, double ratio);
 	
 private:
-	void non_max_suppression(vector<bbox_t>& b_boxes);
+	size_t non_max_suppression(vector<bbox_t>& b_boxes);
 	size_t get_square(int ux, int uy, int dx, int dy);
 	float get_iou(bbox_t lhs, bbox_t rhs);
 
@@ -60,7 +60,8 @@ int main(int argc, const char* argv[])
 		cout << label << '\t' << prediction << '\t' << cur_score << endl;
 		score_vector.push_back(cur_score);
     }
-	cout << "Accuracy: " << accumulate(score_vector.begin(), score_vector.end(), 0.) / score_vector.size() << endl;
+	double accuracy = accumulate(score_vector.begin(), score_vector.end(), 0.) / score_vector.size();
+	cout << "Accuracy: " << accuracy * 100 << "%"  << endl;
 }
 
 
@@ -87,27 +88,32 @@ size_t Solver::get_square(int ux, int uy, int dx, int dy)
 
 float Solver::get_iou(bbox_t lhs, bbox_t rhs)
 {
-	if(lhs.x > rhs.x)
-		swap(lhs, rhs);
+	cv::Rect box1(lhs.x, lhs.y, lhs.w, lhs.h),
+		box2(rhs.x, rhs.y, rhs.w, rhs.h),
+		intersection = box1 & box2;		//intersecion operator
 
-	int common_area = get_square(rhs.x, rhs.y, lhs.x + lhs.h, lhs.y + lhs.w);
-	int lhs_area = get_square(lhs.x, lhs.y, lhs.x + lhs.h, lhs.y + lhs.w),
-		rhs_area = get_square(rhs.x, rhs.y, rhs.x + rhs.h, rhs.y + rhs.w);
-	return (double)common_area / lhs_area + rhs_area - common_area;
+	double intersection_area = intersection.width * intersection.height,
+		union_area = (box1.width * box1.height) + (box2.width * box2.height) - intersection_area;
+
+	return intersection_area / union_area;
 }
 
-void Solver::non_max_suppression(vector<bbox_t>& b_boxes)
+size_t Solver::non_max_suppression(vector<bbox_t>& b_boxes)
 {
 	double thresh = 0.5;
+	size_t removed_boxes=0;
 
 	sort(b_boxes.begin(), b_boxes.end(), [](const bbox_t& lhs, const bbox_t& rhs){
 			return lhs.prob > rhs.prob; });
 
 	for(auto pivot = b_boxes.begin(); pivot != b_boxes.end(); ++pivot)
 	{
-		auto it = remove_if(pivot + 1, b_boxes.end(), [this, pivot, thresh](const bbox_t& i){return this->get_iou(*pivot, i) > thresh; });
+		auto it = remove_if(pivot + 1, b_boxes.end(), [this, pivot, thresh](const bbox_t& i){
+				return this->get_iou(*pivot, i) > thresh; });
+		removed_boxes += distance(it, b_boxes.end());
 		b_boxes.erase(it, b_boxes.end());
 	}
+	return removed_boxes;
 }
 
 // YOLO를 이용하여 Captcha를 해독하고, 그 string을 반환하는 함수
@@ -117,8 +123,6 @@ string Solver::predict(const string& image_name)
 	resize(img, 3.);
 	vector<bbox_t> b_boxes = detector.detect(img);
 
-	if(show_image)
-		flatten_boxes(img, image_name , "_before_nms", b_boxes);
 
 	non_max_suppression(b_boxes);
 
