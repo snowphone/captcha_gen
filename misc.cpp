@@ -33,10 +33,6 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t>& result_vec, const std::vec
 	}
 }
 
-cv::Mat load_Mat(const std::string & image_filename)
-{
-	return cv::imread(image_filename);
-}
 
 cv::Mat image_t_to_mat(const image_t & img)
 {
