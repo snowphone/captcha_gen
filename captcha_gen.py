@@ -57,12 +57,12 @@ class Captcha_image():
 	#private
 	def _init_table(self):
 		table = {}
-		for i, ch in enumerate(string.digits + string.ascii_uppercase):
+		for i, ch in enumerate(string.ascii_lowercase):
 			table[ch] = i
 		return table
 
 	def _random_char(self):
-		return random.choice(string.ascii_uppercase + string.digits)
+		return random.choice(string.ascii_lowercase)
 
 
 	def _generate_captcha(self, width, height, margin=(0,0)):
