@@ -1,4 +1,5 @@
 #include <fstream>
+#include <cstdio>
 #include <string>
 #include <algorithm>
 #include <iostream>
@@ -27,7 +28,11 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t>& result_vec, const std::vec
 		cv::Scalar color = obj_id_to_color(i.obj_id);
 		cv::rectangle(mat_img, cv::Rect(i.x, i.y, i.w, i.h), color, 3);
 		if (obj_names.size() > i.obj_id)
-			putText(mat_img, obj_names[i.obj_id] + "_" + std::to_string(i.prob), cv::Point2f(i.x, i.y - 10), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, color);
+		{
+			char buff[256] = {0, };
+			sprintf(buff, "%.2f", i.prob);
+			putText(mat_img, obj_names[i.obj_id] + "_" + buff, cv::Point2f(i.x, i.y - 10), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, color);
+		}
 		if (i.track_id > 0)
 			putText(mat_img, std::to_string(i.track_id), cv::Point2f(i.x + 5, i.y + 15), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, color);
 	}
