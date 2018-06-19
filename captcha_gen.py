@@ -61,10 +61,13 @@ class Captcha_image():
 		def isfont(filename):
 			return True if filename.find(".ttf") != -1 or filename.find(".otf") != -1 else False
 
-		fonts = [font for font in os.listdir("./fonts/") if isfont(font)]
+		fonts = [os.path.join(dirpath, name) 
+				for dirpath, _dirname, names in os.walk("./fonts/") 
+				for name in names
+				if isfont(name)]
 
 
-		font = "./fonts/" + random.choice(fonts)
+		font = random.choice(fonts)
 
 		self.captcha_list = [ Claptcha(
 			self._random_char(), 
