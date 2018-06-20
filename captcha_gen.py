@@ -12,8 +12,24 @@ import sys
 from sys import argv
 
 import PIL
-from captcha.image import ImageCaptcha 
+from PIL import ImageFilter
+import captcha
+from captcha.image import ImageCaptcha, random_color 
 from PIL import Image
+
+class myCaptcha(captcha.image.ImageCaptcha):
+	def __init__(self, width=160, height=60, fonts=None, font_sizes=None):
+		super().__init__(width, height, fonts, font_sizes)
+		self.background = random_color(238, 255)
+		self.color = random_color(10, 200, random.randint(220, 255))
+
+	def generate_image(self, chars):
+		im = self.create_captcha_image(chars, self.color, self.background)
+		return im
+	#end of myCaptcha
+
+
+
 
 
 class Captcha_image():
@@ -37,14 +53,16 @@ class Captcha_image():
 		self.noise = noise
 		self.max_size = 200
 		self.max_captcha_num = 8
+
+		size = random.randint(self.max_size // 2, self.max_size)
+		self.generator = myCaptcha(fonts=["./fonts/monospace/saxmono.ttf"], font_sizes=(int(size * 0.8),int(size * 0.8),int(size * 0.8)))
+		self._generate_captcha(int(size * 0.8), size)
+
 		self.image = Image.new( 
 				"RGB", 
 				(int(self.max_size * 0.9 * (self.max_captcha_num + 1)), self.max_size * 2),			
-				color=(255, 255, 255))
+				color=self.generator.background)
 
-		size = random.randint(self.max_size // 2, self.max_size)
-		self.generator = ImageCaptcha(fonts=["./fonts/monospace/saxmono.ttf"], font_sizes=(int(size * 0.8),int(size * 0.8),int(size * 0.8)))
-		self._generate_captcha(int(size * 0.8), size)
 		self._add_background()
 		return
 
@@ -109,7 +127,15 @@ class Captcha_image():
 
 		for roi, captcha in zip(self.roi_list, self.captcha_list):
 			self.image.paste(captcha, roi)
+
+		self._make_noise()
 		return 
+
+	def _make_noise(self):
+		self.generator.create_noise_dots(self.image, self.generator.color)
+		self.generator.create_noise_curve(self.image, self.generator.color)
+		self.image = self.image.filter(ImageFilter.SMOOTH)
+		return
 
 
 	def _make_ground_truth_box(self, file_basename):
@@ -160,6 +186,7 @@ class Validation_image(Captcha_image):
 		pass
 
 	def _add_background(self):
+		self._make_noise()
 		pass
 
 
