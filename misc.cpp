@@ -152,12 +152,18 @@ string get_new_name(const string& image_name, const string& epilogue)
         basename_end = image_name.begin() + image_name.rfind('.');
 	string basename(basename_begin, basename_end);
     string extension; 
-    if(image_name.find(".jpg") != string::npos)
+    if(image_name.rfind(".jpg") != string::npos)
+	{
         extension = ".jpg";
+	}
 	else if(image_name.rfind(".png") != string::npos)
+	{
         extension = ".png";
+	}
     else
+	{
         extension = ".mkv";
+	}
 
 	return basename + "_" + epilogue + extension;
 }
