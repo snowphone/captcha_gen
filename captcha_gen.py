@@ -51,16 +51,18 @@ class Captcha_image():
 
 		self.roi_list = []
 		self.noise = noise
-		self.max_size = 200
+		self.max_size = 80
 		self.max_captcha_num = 8
 
 		size = random.randint(self.max_size // 2, self.max_size)
-		self.generator = myCaptcha(fonts=["./fonts/monospace/saxmono.ttf"], font_sizes=(int(size * 0.8),int(size * 0.8),int(size * 0.8)))
-		self._generate_captcha(int(size * 0.8), size)
+		ratio = 0.7
+		self.generator = myCaptcha(fonts=["./fonts/monospace/saxmono.ttf"], font_sizes=(int(size * ratio),int(size * ratio),int(size * ratio)))
+		self._generate_captcha(int(size * ratio), size)
 
+		char_num = len(self.captcha_list)
 		self.image = Image.new( 
 				"RGB", 
-				(int(self.max_size * 0.9 * (self.max_captcha_num + 1)), self.max_size * 2),			
+				(int(size * ratio * (char_num) * 1.5), int(size * 1.5)),			
 				color=self.generator.background)
 
 		self._add_background()
@@ -109,7 +111,7 @@ class Captcha_image():
 		height = self.captcha_list[0].height
 
 		def get_random_roi(width, height):
-			leftupper = (random.randint(80, width), random.randint(0, height))
+			leftupper = (random.randint(10, self.image.width - width - 10), random.randint(10, self.image.height - height - 10))
 			rightlower = (leftupper[0] + width, leftupper[1] + height)
 			return (leftupper, rightlower)
 
