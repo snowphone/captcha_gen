@@ -12,7 +12,7 @@ import sys
 from sys import argv
 
 import PIL
-from claptcha import Claptcha
+from captcha.image import ImageCaptcha 
 from PIL import Image
 
 
@@ -25,6 +25,7 @@ class Captcha_image():
 			return True if filename.find(".ttf") != -1 or filename.find(".otf") != -1 else False
 
 		self.captcha_list = []
+		self.label_list = []
 		self.table = self._init_table()
 		self.fonts = [os.path.join(dirpath, name) 
 				for dirpath, _dirname, names in os.walk("./fonts/") 
@@ -42,7 +43,8 @@ class Captcha_image():
 				color=(255, 255, 255))
 
 		size = random.randint(self.max_size // 2, self.max_size)
-		self._generate_captcha(size * 0.9, size)
+		self.generator = ImageCaptcha(fonts=["./fonts/monospace/saxmono.ttf"], font_sizes=(int(size * 0.8),int(size * 0.8),int(size * 0.8)))
+		self._generate_captcha(int(size * 0.8), size)
 		self._add_background()
 		return
 
@@ -70,25 +72,23 @@ class Captcha_image():
 		It returns captcha object.
 		"""
 
-		char_num = random.randint(1, self.max_captcha_num)
+		char_num = random.randint(1 if self.max_captcha_num == 1 else self.max_captcha_num // 2, self.max_captcha_num)
+		self.generator._width = width
+		self.generator._height = height
 
-		self.captcha_list = [ Claptcha(
-			self._random_char(), 
-			#"./fonts/monospace/VeraMono.ttf",
-			"./fonts/monospace/saxmono.ttf",
-			(width , height),
-			margin=margin, 
-			resample=Image.BILINEAR, 
-			noise=self.noise) 
-			for font in random.sample(self.fonts, char_num)]
+		for _ in range(char_num):
+			text = self._random_char()
+			self.label_list.append(text)
+			self.captcha_list.append(self.generator.generate_image(text))
+
 
 		return self.captcha_list
 	
 	def _add_background(self):
 
 		captcha_num = len(self.captcha_list)
-		width = self.captcha_list[0].w 
-		height = self.captcha_list[0].h
+		width = self.captcha_list[0].width
+		height = self.captcha_list[0].height
 
 		def get_random_roi(width, height):
 			leftupper = (random.randint(80, width), random.randint(0, height))
@@ -108,7 +108,7 @@ class Captcha_image():
 		self.roi_list = split_roi(*_roi)
 
 		for roi, captcha in zip(self.roi_list, self.captcha_list):
-			self.image.paste(captcha.image[1], roi)
+			self.image.paste(captcha, roi)
 		return 
 
 
@@ -119,13 +119,13 @@ class Captcha_image():
 		folder = "./img/"
 
 		with open(folder + file_basename + ".txt", mode="w+") as f:
-			for roi, captcha in zip(self.roi_list, self.captcha_list):
+			for roi, captcha, text in zip(self.roi_list, self.captcha_list, self.label_list):
 				roi_width = roi[2] - roi[0]
 				roi_height = roi[3] - roi[1]
 				center = ((roi[0] + roi[2]) / 2, (roi[1] + roi[3]) / 2)
 
 				f.write("{class_index} {x:f} {y:f} {width:f} {height:f}\n".format(
-					class_index=self.table[captcha.text],
+					class_index=self.table[text],
 					x=center[0] / self.image.width,
 					y=center[1] / self.image.height,
 					width=roi_width / self.image.width,
@@ -149,13 +149,14 @@ class Validation_image(Captcha_image):
 	def _generate_captcha(self, _w, _h):
 		self.max_captcha_num = 1
 		n = random.randint(self.max_size // 2, self.max_size)
-		width = 100 * 5
-		height = 30 * 5
+		width = 200
+		height = 75
+		self.generator._font_sizes = (42, 50, 56)
 
 		return super()._generate_captcha(width, height, (10, 10))
 
 	def _make_ground_truth_box(self, _file_basename):
-		self.image = self.captcha_list[0].image[1]
+		self.image = self.captcha_list[0]
 		pass
 
 	def _add_background(self):
@@ -177,7 +178,7 @@ if __name__ == "__main__":
 			captcha = Validation_image()
 		else:
 			captcha = Captcha_image() 
-		label = "".join([cap.text for cap in captcha.captcha_list])
+		label = "".join([cap for cap in captcha.label_list ])
 		file_basename = "{cnt:05d}_label_{label:s}".format( cnt=i, label=label )
 		if isvalid:
 			file_basename = "valid_" + file_basename 
