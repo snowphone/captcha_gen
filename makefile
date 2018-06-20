@@ -1,5 +1,5 @@
-TARGET= solver
-OBJECT =  misc.o parser.o solver.o
+TARGET= solver flatter
+OBJECT =  misc.o parser.o 
 darknet = ../darknet/darknet.so
 
 #헤더파일
@@ -13,7 +13,10 @@ LINK = -lopencv_videoio -lopencv_imgproc -lopencv_imgcodecs -lopencv_core
 %.o : %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-solver :  $(OBJECT) 
+solver :  $(OBJECT) solver.o
+	$(CXX) $(LINK) -o $@ $^  $(darknet)
+
+flatter :  $(OBJECT) flatter.o
 	$(CXX) $(LINK) -o $@ $^  $(darknet)
 
 clean:
