@@ -74,7 +74,8 @@ class Captcha_image():
 
 		self.captcha_list = [ Claptcha(
 			self._random_char(), 
-			font,
+			#"./fonts/monospace/VeraMono.ttf",
+			"./fonts/monospace/saxmono.ttf",
 			(width , height),
 			margin=margin, 
 			resample=Image.BILINEAR, 
