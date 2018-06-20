@@ -1,6 +1,6 @@
 TARGET= solver flatter
 OBJECT =  misc.o parser.o 
-darknet = ../darknet/darknet.so
+darknet = ./darknet.so
 
 #헤더파일
 CXXFLAGS = -O2 -std=c++14 
